@@ -1,9 +1,19 @@
-local level = {} -- Exported stuff goes here
+-- Exported stuff goes here
+local LevelExports = {} 
 
-local directions = { "N", "W", "S", "E" }
-local oppositeDirections = { N = "S",  W = "E", S = "N", E = "W", }
+-- Forward declarations of local functions
+local CreateRoom, ShuffleCopy, CheckSparse, CarvePassageTo
 
-local directionFix = {
+local Directions = { "N", "W", "S", "E" }
+
+local OppositeDirections = { 
+	N = "S",  
+	W = "E", 
+	S = "N", 
+	E = "W", 
+}
+
+local DirectionFix = {
 	N = function(x, y) return x, y - 1 end,
 	W = function(x, y) return x - 1, y end,
 	S = function(x, y) return x, y + 1 end,
@@ -19,9 +29,7 @@ local directionFix = {
 -- 	seed = 123,
 -- }
 
-local createRoom, shuffleCopy, checkSparse, carvePassageTo
-
-function level.create(levelDef)
+function LevelExports.Create(levelDef)
 	local rooms = {}
 	for i = 1, levelDef.width do
 		rooms[i] = {}
@@ -36,7 +44,7 @@ function level.create(levelDef)
 		endPoints = {},
 		def = levelDef,
 	}
-	local room = carvePassageTo(startx, starty, level)
+	local room = CarvePassageTo(startx, starty, level)
 	local numPassages = 0
 	for _ in pairs(room.passages) do
 		numPassages = numPassages + 1
@@ -48,7 +56,7 @@ function level.create(levelDef)
 	return level
 end
 
-function createRoom(levelDef, x, y)
+function CreateRoom(levelDef, x, y)
 	local width = math.random(levelDef.roomsWidth[1], levelDef.roomsWidth[2])
 	local height = math.random(levelDef.roomsHeight[1], levelDef.roomsHeight[2])
 	local room = {
@@ -61,7 +69,7 @@ function createRoom(levelDef, x, y)
 	return room
 end
 
-function shuffleCopy(arr)
+function ShuffleCopy(arr)
 	local ret = { arr[1], }
 	for i = 2, #arr do
 		local j = math.random(1, i)
@@ -71,7 +79,7 @@ function shuffleCopy(arr)
 	return ret
 end
 
-function checkSparse(x, y, cameFrom, level)
+function CheckSparse(x, y, cameFrom, level)
 	if not level.def.sparseRadius then
 		return true
 	end
@@ -105,19 +113,19 @@ function checkSparse(x, y, cameFrom, level)
 	return true
 end
 
-function carvePassageTo(x, y, level)
-	local room = createRoom(level.def, x, y)
+function CarvePassageTo(x, y, level)
+	local room = CreateRoom(level.def, x, y)
 	assert(not level.rooms[x][y])
 	level.rooms[x][y] = room
 	local width = level.def.width
 	local height = level.def.height
-	local directions = shuffleCopy(directions)
+	local directions = ShuffleCopy(Directions)
 	for _, dir in ipairs(directions) do
-		local nx, ny = directionFix[dir](x, y)
+		local nx, ny = DirectionFix[dir](x, y)
 		if nx >= 1 and ny >= 1 and nx <= width and ny <= height and not level.rooms[nx][ny] then
-			local cameFrom = oppositeDirections[dir]
-			if checkSparse(nx, ny, cameFrom, level) then
-				local newRoom = carvePassageTo(nx, ny, level)
+			local cameFrom = OppositeDirections[dir]
+			if CheckSparse(nx, ny, cameFrom, level) then
+				local newRoom = CarvePassageTo(nx, ny, level)
 				room.passages[dir] = newRoom
 				newRoom.passages[cameFrom] = room
 			end
@@ -130,4 +138,4 @@ function carvePassageTo(x, y, level)
 	return room
 end
 
-return level
+return LevelExports

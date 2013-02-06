@@ -1,8 +1,9 @@
-player = {} -- Exported stuff goes here
+-- Exported stuff goes here
+PlayerExports = {}
 
 local Player = {}
 
-function player.create(level, room)
+function PlayerExports.Create(level, room)
 	local newPlayer = {
 		level = level,
 		room = room,
@@ -18,7 +19,7 @@ function player.create(level, room)
 	return newPlayer
 end
 
-function Player:moveToRoom(dir)
+function Player:MoveToRoom(dir)
 	local newRoom = self.room.passages[dir]
 	if not newRoom then
 		return false
@@ -28,8 +29,8 @@ function Player:moveToRoom(dir)
 	return true
 end
 
-function Player:isRoomExplored(room)
+function Player:IsRoomExplored(room)
 	return self.exploredRooms[room]
 end
 
-return player
+return PlayerExports

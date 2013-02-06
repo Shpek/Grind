@@ -1,6 +1,8 @@
-local drawLevel = {} -- Exported stuff goes here
+-- Exported stuff goes here
+local DrawLevelExports = {}
 
-local drawDoors
+-- Forward declarations of local functions
+local DrawDoors
 
 -- local params = {
 -- 	cellWidth = 30,
@@ -14,7 +16,7 @@ local drawDoors
 -- 	doorColor = { 0, 0, 255 },
 -- }
 
-function drawLevel.draw(level, player, screenx, screeny, params)
+function DrawLevelExports.Draw(level, player, screenx, screeny, params)
 	local width = level.def.width
 	local height = level.def.height
 	local xoffset = (params.cellWidth - params.roomWidth) / 2
@@ -24,9 +26,9 @@ function drawLevel.draw(level, player, screenx, screeny, params)
 		local column = level.rooms[x]
 		for y = 1, height do
 			local room = column[y]
-			if room and player:isRoomExplored(room) then
+			if room and player:IsRoomExplored(room) then
 				local yscreen = (y - 1) * params.cellHeight + screeny
-				-- drawDoors(room, xscreen, yscreen)
+				-- DrawDoors(room, xscreen, yscreen)
 				if player.room == room then
 					love.graphics.setColor(params.playerColor)
 				elseif room.endPoint then
@@ -35,13 +37,13 @@ function drawLevel.draw(level, player, screenx, screeny, params)
 					love.graphics.setColor(params.roomColor)
 				end
 				love.graphics.rectangle("fill", xscreen + xoffset, yscreen + yoffset, params.roomWidth, params.roomHeight)
-				drawDoors(room, xscreen, yscreen, params)
+				DrawDoors(room, xscreen, yscreen, params)
 			end
 		end
 	end
 end
 
-function drawDoors(room, xscreen, yscreen, params)
+function DrawDoors(room, xscreen, yscreen, params)
 	for passage in pairs(room.passages) do
 		if passage == "N" then
 			love.graphics.setColor(params.doorColor)
@@ -86,4 +88,4 @@ function drawDoors(room, xscreen, yscreen, params)
 	end
 end
 
-return drawLevel
+return DrawLevelExports
