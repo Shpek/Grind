@@ -38,8 +38,8 @@ function Queue.PopBack(queue)
 	return val
 end
 
-function Queue.IsEmpty()
-	return queue.first <= queue.last
+function Queue.IsEmpty(queue)
+	return queue.first > queue.last
 end
 
 return Queue

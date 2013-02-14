@@ -1,3 +1,4 @@
+local Scheduler = require "Scheduler"
 local Level = require "Level"
 local DrawLevel = require "DrawLevel"
 local Player = require "Player"
@@ -38,7 +39,8 @@ end
 function GameExports.Done()
 end
 
-function GameExports.Update()
+function GameExports.Update(time)
+	Scheduler.Update(time)
 end
 
 function GameExports.Draw()

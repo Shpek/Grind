@@ -5,40 +5,55 @@ local Queue = require "Queue"
 SchedulerExports = {}
 
 -- Declarations of local functions
-local Register
+local ProcessThreadInfo
 
 local SleepingThreads = Heap.New(function(a, b) return a < b end)
-local NextFrameThreds = Queue.New()
+local NextFrameThreads = Queue.New()
+local UpdatedThisFrameNextFrameThreads = Queue.New()
 local ThreadsInfo = {}
 ----
 -- Exports
 ----
 
-function Scheduler.Init()
+function SchedulerExports.Init()
 end
 
-function Scheduler.Done()
+function SchedulerExports.Done()
 end
 
-function Scheduler.NewThread(fn)
+function SchedulerExports.NewThread(fn)
 	local thread = coroutine.create(fn)
 	local threadInfo = {
 		thread = thread,
 		nextUpdateTime = 0,
 	}
 	ThreadsInfo[thread] = threadInfo
-	Queue.PushBack(NextFrameThreds, threadInfo)
+	Queue.PushBack(NextFrameThreads, threadInfo)
 	return thread
 end
 
-function Scheduler.Sleep(duration)
+function SchedulerExports.Sleep(duration)
 	coroutine.yield(duration or -1)
 end
 
-function Scheduler.Resume(thread)
+function SchedulerExports.Resume(thread)
+	local threadInfo = ThreadsInfo[thread]
+	if not threadInfo then
+		error("Trying to resume unknown thread")
+	end
+	local nextUpdateTime = threadInfo.nextUpdateTime
+	if nextUpdateTime == 0 then
+		return
+	elseif nextUpdateTime == -1 then
+		Queue.PushBack(NextFrameThreads, threadInfo)
+	else
+		local info = Heap.Del(h, threadInfo.heapIdx)
+		assert(info == threadInfo)
+		Queue.PushBack(NextFrameThreads, threadInfo)
+	end
 end
 
-function Scheduler.Terminate(thread)
+function SchedulerExports.Terminate(thread)
 	local threadInfo = ThreadsInfo[thread]
 	if not threadInfo then
 		error("Trying to terminate unknown thread")
@@ -47,9 +62,17 @@ function Scheduler.Terminate(thread)
 		error("Trying to terminate thread more than once")
 	end
 	threadInfo.terminated = true
+	if threadInfo.nextUpdateTime <= 0 then
+		-- If the thread is scheduled for the next frame (updateTime == 0)
+		-- do nothing - it will be removed from the queue on the next update
+		return
+	end
+	-- The thread is scheduled in the update heap
+	local info = Heap.Del(h, threadInfo.heapIdx)
+	assert(info == threadInfo)
 end
 
-function Scheduler.Update(time)
+function SchedulerExports.Update(time)
 	while true do
 		local threadInfo = Heap.Peek(SleepingThreads)
 		if not threadInfo then
@@ -65,9 +88,12 @@ function Scheduler.Update(time)
 			ProcessThreadInfo(time, threadInfo)
 		end
 	end
-	while not Queue.IsEmpty(NextFrameThreds) do
-		local threadInfo = Queue.PopFront(NextFrameThreds)
+	while not Queue.IsEmpty(NextFrameThreads) do
+		local threadInfo = Queue.PopFront(NextFrameThreads)
 		ProcessThreadInfo(time, threadInfo)
+	end
+	while not Queue.IsEmpty(UpdatedThisFrameNextFrameThreads) do
+		Queue.PushBack(NextFrameThreads, Queue.PopFront(UpdatedThisFrameNextFrameThreads))
 	end
 end
 
@@ -77,22 +103,38 @@ end
 
 function ProcessThreadInfo(time, threadInfo)
 	if threadInfo.terminated then
-		ThreadsInfo[thread] = nil
+		ThreadsInfo[threadInfo.thread] = nil
 		return
 	end
-	local success, sleepTime = coroutine.resume(threadInfo.thread)
-	if not success then
+	local thread = threadInfo.thread
+	local success, sleepTime = coroutine.resume(thread)
+	if not success or coroutine.status(thread) == "dead" then
 		ThreadsInfo[thread] = nil
 	elseif sleepTime == 0 then
 		threadInfo.nextUpdateTime = 0
-		Queue.PushBack(NextFrameThreds, threadInfo)
+		Queue.PushBack(UpdatedThisFrameNextFrameThreads, threadInfo)
 	elseif sleepTime > 0 then
 		local nextUpdateTime = time + sleepTime
 		threadInfo.nextUpdateTime = nextUpdateTime
-		Heap.Push(SleepingThreads, threadInfo, nextUpdateTime)
+		threadInfo.heapIdx = Heap.Push(SleepingThreads, threadInfo, nextUpdateTime)
 	else
 		threadInfo.nextUpdateTime = -1
 	end
 end
 
 return SchedulerExports
+
+-- do
+-- 	local S = SchedulerExports
+-- 	for i = 1, 100 do
+-- 		S.NewThread(function()
+-- 			while true do
+-- 				S.Sleep(1)
+-- 				print("---")
+-- 			end
+-- 		end)
+-- 	end
+-- 	for i = 1, 10000000 do
+-- 		S.Update(os.clock())
+-- 	end
+-- end

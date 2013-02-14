@@ -9,11 +9,12 @@ function love.quit()
 end
 
 function love.update()
-	Game.Update()
+	Game.Update(love.timer.getMicroTime())
 end
 
 function love.draw()
 	Game.Draw()
+	love.graphics.printf(tostring(love.timer.getFPS()), 10, 10, 100, "left")
 end
 
 function love.keypressed(key)
