@@ -131,37 +131,37 @@ function CheckConsistency(heap)
 	return true
 end
 
--- return HeapExports
+return HeapExports
 
-do 
-	local Heap = HeapExports
-	local h = Heap.New(function(a, b) return a < b end)
+-- do 
+-- 	local Heap = HeapExports
+-- 	local h = Heap.New(function(a, b) return a < b end)
 
-	print("--- done 1 " .. os.clock())
-	math.randomseed(os.clock())
+-- 	print("--- done 1 " .. os.clock())
+-- 	math.randomseed(os.clock())
 
-	for i = 1, 30000 do
-		local el = math.random()
-		Heap.Push(h, i, el)
-	end
+-- 	for i = 1, 30000 do
+-- 		local el = math.random()
+-- 		Heap.Push(h, i, el)
+-- 	end
 
-	assert(CheckConsistency(h))
-	while not Heap.IsEmpty(h) do
-		local ind = 1 + math.floor(math.random() * (#h - 1))
-		Heap.Del(h, ind)
-	end
+-- 	assert(CheckConsistency(h))
+-- 	while not Heap.IsEmpty(h) do
+-- 		local ind = 1 + math.floor(math.random() * (#h - 1))
+-- 		Heap.Del(h, ind)
+-- 	end
 	
-	print("--- done 2 " .. os.clock())
+-- 	print("--- done 2 " .. os.clock())
 
-	local prev
-	while true do
-		local el, val = Heap.Pop(h)
-		if not el then
-			break
-		end
-		assert(not prev or prev == val or h.fnIsGreater(prev, val))
-		prev = val
-	end
+-- 	local prev
+-- 	while true do
+-- 		local el, val = Heap.Pop(h)
+-- 		if not el then
+-- 			break
+-- 		end
+-- 		assert(not prev or prev == val or h.fnIsGreater(prev, val))
+-- 		prev = val
+-- 	end
 
-	print("--- done 3 " .. os.clock())
-end
+-- 	print("--- done 3 " .. os.clock())
+-- end
