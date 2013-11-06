@@ -4,7 +4,7 @@ local DrawLevel = require "DrawLevel"
 local Player = require "Player"
 
 -- Exported stuff goes here
-GameExports = {}
+local Game = {}
 
 -- Forward declarations of local functions
 local InitLevel
@@ -32,22 +32,22 @@ local LevelDrawParams = {
 
 local LevelInst, PlayerInst
 
-function GameExports.Init()
+function Game.Init()
 	InitLevel()
 end
 
-function GameExports.Done()
+function Game.Done()
 end
 
-function GameExports.Update(time)
+function Game.Update(time)
 	Scheduler.Update(time)
 end
 
-function GameExports.Draw()
+function Game.Draw()
 	DrawLevel.Draw(LevelInst, PlayerInst, 20, 250, LevelDrawParams)
 end
 
-function GameExports.KeyPressed(key)
+function Game.KeyPressed(key)
 	if key == "w" then
 		PlayerInst:MoveToRoom("N")
 	elseif key == "s" then
@@ -69,4 +69,4 @@ function InitLevel()
 	PlayerInst = Player.Create(levelInst, startRoom)
 end
 
-return GameExports
+return Game

@@ -1,5 +1,5 @@
 -- Exported stuff goes here
-local DrawLevelExports = {}
+local DrawLevel = {}
 
 -- Forward declarations of local functions
 local DrawDoors
@@ -16,7 +16,7 @@ local DrawDoors
 -- 	doorColor = { 0, 0, 255 },
 -- }
 
-function DrawLevelExports.Draw(level, player, screenx, screeny, params)
+function DrawLevel.Draw(level, player, screenx, screeny, params)
 	local width = level.def.width
 	local height = level.def.height
 	local xoffset = (params.cellWidth - params.roomWidth) / 2
@@ -88,4 +88,4 @@ function DrawDoors(room, xscreen, yscreen, params)
 	end
 end
 
-return DrawLevelExports
+return DrawLevel

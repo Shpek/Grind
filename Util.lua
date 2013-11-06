@@ -1,4 +1,3 @@
-
 function TableToString(tbl, depth)
 	if depth == nil then
 		depth = 0
@@ -11,6 +10,5 @@ function TableToString(tbl, depth)
 			dumpStr = dumpStr .. tostring(k) .. " = " .. tostring(v) .. " "	
 		end
 	end
-	dumpStr = dumpStr .. "}"
-	return dumpStr
+	return dumpStr .. "}"
 end

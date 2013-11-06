@@ -1,5 +1,5 @@
 -- Exported stuff goes here
-HeapExports = {}
+local Heap = {}
 
 -- Declarations of local functions
 local SiftUp, SiftDown, CheckConsistency
@@ -8,35 +8,37 @@ local SiftUp, SiftDown, CheckConsistency
 -- Exports
 ----
 
-function HeapExports.New(fnIsGreater)
+function Heap.New(fnIsGreater)
 	if not fnIsGreater then
 		fnIsGreater = function(a, b) return a > b end
 	end
 	return { fnIsGreater = fnIsGreater, }
 end
 
-function HeapExports.Push(heap, el, val)
-	table.insert(heap, { el, val })
+function Heap.Push(heap, el, val)
+	table.insert(heap, { el, val, #heap + 1 })
 	return SiftUp(heap, #heap)
 end
 
-function HeapExports.IsEmpty(heap)
+function Heap.IsEmpty(heap)
 	return #heap == 0
 end
 
-function HeapExports.Pop(heap, ind)
+function Heap.Pop(heap, ind)
 	local numEls = #heap
 	if numEls == 0 then
 		return nil
 	end
 	local el = heap[1]
-	heap[1] = heap[numEls]
+	local last = heap[numEls]
+	heap[1] = last
+	last[3] = 1
 	heap[numEls] = nil
 	SiftDown(heap, 1)
 	return el[1], el[2]
 end
 
-function HeapExports.Peek(heap)
+function Heap.Peek(heap)
 	if #heap == 0 then
 		return nil
 	end
@@ -44,19 +46,22 @@ function HeapExports.Peek(heap)
 	return el[1], el[2]
 end
 
-function HeapExports.Del(heap, ind)
+function Heap.Del(heap, handle)
+	local ind = handle[3]
 	local numEls = #heap
-	if 1 > ind or ind > numEls then
-		return nil
+	if ind == numEls then
+		heap[ind] = nil
+	else
+		local last = heap[numEls]
+		heap[ind] = last
+		last[3] = ind
+		heap[numEls] = nil
+		if numEls > 1 then
+			ind = SiftUp(heap, ind)[3]
+			SiftDown(heap, ind)
+		end
 	end
-	local el = heap[ind]
-	heap[ind] = heap[numEls]
-	heap[numEls] = nil
-	if numEls > 1 then
-		ind = SiftUp(heap, ind)
-		SiftDown(heap, ind)
-	end
-	return el[1], el[2]
+	return handle[1], handle[2]
 end
 
 ----
@@ -64,66 +69,74 @@ end
 ----
 
 function SiftUp(heap, ind)
-	if 0 > ind or ind > #heap then
-		return nil
-	end
+	local fnIsGreater = heap.fnIsGreater
 	while true do
 		if ind == 1 then
-			return 1
+			return heap[1]
 		end
 		local current = heap[ind]
 		local parentInd = math.floor(ind / 2)
 		local parent = heap[parentInd]
-		if heap.fnIsGreater(current[2], parent[2]) then
+		if fnIsGreater(current[2], parent[2]) then
 			heap[ind] = parent
+			parent[3] = ind
 			heap[parentInd] = current
+			current[3] = parentInd
 			ind = parentInd
 		else
-			return ind
+			return current
 		end
 	end
 end
 
 function SiftDown(heap, ind)
 	local heapLength = #heap
+	local fnIsGreater = heap.fnIsGreater
 	while true do
 		local leftChildInd = 2 * ind
-		local rightChildInd = 2 * ind + 1
+		local rightChildInd = leftChildInd + 1
 		local swapInd = ind
-		if leftChildInd <= heapLength and heap.fnIsGreater(heap[leftChildInd][2], heap[swapInd][2]) then
+		if leftChildInd <= heapLength and fnIsGreater(heap[leftChildInd][2], heap[swapInd][2]) then
 			swapInd = leftChildInd
 		end
-		if rightChildInd <= heapLength and heap.fnIsGreater(heap[rightChildInd][2], heap[swapInd][2]) then
+		if rightChildInd <= heapLength and fnIsGreater(heap[rightChildInd][2], heap[swapInd][2]) then
 			swapInd = rightChildInd
 		end
 		if swapInd ~= ind then
 			local current = heap[ind]
-			heap[ind] = heap[swapInd]
+			local swap = heap[swapInd]
+			heap[ind] = swap
+			swap[3] = ind
 			heap[swapInd] = current
+			current[3] = swapInd
 			ind = swapInd
 		else
-			return ind
+			return heap[ind]
 		end
 	end
 end
 
 function CheckConsistency(heap)
 	local len = #heap
+	local fnIsGreater = heap.fnIsGreater
 	for i = 1, len do
 		local current = heap[i]
+		if current[3] ~= i then
+			return false
+		end
 		local leftInd = 2 * i
-		local rightInd = 2 * i + 1
+		local rightInd = leftInd + 1
 		if leftInd <= len then
 			local currentVal = current[2]
 			local leftVal = heap[leftInd][2]
-			if currentVal ~= leftVal and not heap.fnIsGreater(currentVal, leftVal) then
+			if currentVal ~= leftVal and not fnIsGreater(currentVal, leftVal) then
 				return false
 			end
 		end
 		if rightInd <= len then
 			local currentVal = current[2]
 			local rightVal = heap[rightInd][2]
-			if currentVal ~= rightVal and not heap.fnIsGreater(currentVal, rightVal) then
+			if currentVal ~= rightVal and not fnIsGreater(currentVal, rightVal) then
 				return false
 			end
 		end
@@ -131,27 +144,30 @@ function CheckConsistency(heap)
 	return true
 end
 
-return HeapExports
+return Heap
 
 -- do 
--- 	local Heap = HeapExports
+-- 	math.randomseed(os.clock())
+-- 	local Heap = Heap
 -- 	local h = Heap.New(function(a, b) return a < b end)
 
 -- 	print("--- done 1 " .. os.clock())
--- 	math.randomseed(os.clock())
 
 -- 	for i = 1, 30000 do
 -- 		local el = math.random()
 -- 		Heap.Push(h, i, el)
+-- 		-- assert(CheckConsistency(h))
 -- 	end
-
 -- 	assert(CheckConsistency(h))
+-- 	print("--- done 2 " .. os.clock())
+
 -- 	while not Heap.IsEmpty(h) do
--- 		local ind = 1 + math.floor(math.random() * (#h - 1))
--- 		Heap.Del(h, ind)
+-- 		local handle = h[1 + math.floor(math.random() * (#h - 1))]
+-- 		Heap.Del(h, handle)
+-- 		-- assert(CheckConsistency(h))
 -- 	end
 	
--- 	print("--- done 2 " .. os.clock())
+-- 	print("--- done 3 " .. os.clock())
 
 -- 	local prev
 -- 	while true do
@@ -159,9 +175,10 @@ return HeapExports
 -- 		if not el then
 -- 			break
 -- 		end
+-- 		assert(CheckConsistency(h))
 -- 		assert(not prev or prev == val or h.fnIsGreater(prev, val))
 -- 		prev = val
 -- 	end
 
--- 	print("--- done 3 " .. os.clock())
+-- 	print("--- done 4 " .. os.clock())
 -- end

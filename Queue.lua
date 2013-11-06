@@ -1,4 +1,4 @@
-Queue = {}
+local Queue = {}
 
 function Queue.New()
 	return { first = 0, last = -1 }

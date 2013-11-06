@@ -1,5 +1,5 @@
 -- Exported stuff goes here
-local LevelExports = {} 
+local Level = {} 
 
 -- Forward declarations of local functions
 local CreateRoom, ShuffleCopy, CheckSparse, CarvePassageTo
@@ -7,7 +7,7 @@ local CreateRoom, ShuffleCopy, CheckSparse, CarvePassageTo
 local Directions = { "N", "W", "S", "E" }
 
 local OppositeDirections = { 
-	N = "S",  
+	N = "S", 
 	W = "E", 
 	S = "N", 
 	E = "W", 
@@ -29,7 +29,7 @@ local DirectionFix = {
 -- 	seed = 123,
 -- }
 
-function LevelExports.Create(levelDef)
+function Level.Create(levelDef)
 	local rooms = {}
 	for i = 1, levelDef.width do
 		rooms[i] = {}
@@ -138,4 +138,4 @@ function CarvePassageTo(x, y, level)
 	return room
 end
 
-return LevelExports
+return Level
