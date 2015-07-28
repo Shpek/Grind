@@ -24,7 +24,7 @@ function Heap.IsEmpty(heap)
 	return #heap == 0
 end
 
-function Heap.Pop(heap, ind)
+function Heap.Pop(heap)
 	local numEls = #heap
 	if numEls == 0 then
 		return nil

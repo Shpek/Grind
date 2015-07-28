@@ -70,7 +70,7 @@ function Scheduler.Terminate(thread)
 	end
 	threadInfo.terminated = true
 	if threadInfo.nextUpdateTime <= 0 then
-		-- If the thread is scheduled for the next frame (updateTime == 0)
+		-- If the thread is scheduled for the next farme (updateTime == 0)
 		-- do nothing - it will be removed from the queue on the next update
 		return
 	end
